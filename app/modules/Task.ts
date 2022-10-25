@@ -1,10 +1,15 @@
 import DBConfig from "../config/DBConfig";
 import { ITask } from "../models/ITask";
+import { DatabaseUtils } from "../utils/DataseUtils";
 
 export class Task {
 
     private db = DBConfig.getInstance();
+    private utils = new DatabaseUtils();
 
+    /**
+     * @returns list of all tasks
+     */
     getAll() {
         const selectQuery: string = 
         `SELECT t.id, t.title,s.title AS status
@@ -13,6 +18,10 @@ export class Task {
         return this.db.query(`${selectQuery};`);
     }
 
+    /**
+     * @param id task id
+     * @returns one task for a given ID
+     */
     getOne(id: number) {
         const selectQuery: string = 
         `SELECT 
@@ -26,28 +35,43 @@ export class Task {
         return this.db.query(`${selectQuery}`);
     }
 
+    /**
+     * Create a task
+     * @param task ITask instance
+     * @returns created task
+     */
     create(task: ITask) {
-        const values: string = this.setValues(task);
+        const values = this.utils.prepareInsertValues(task);
         return this.db.query(`INSERT INTO tasks VALUES ${values}`);
     }
 
-    update(task: ITask) {
+    /**
+     * Update a task
+     * @param id Task ID
+     * @param task Task instance to be updated
+     * @return Updated task
+     */
+    update(id: number, task: ITask) {
+        if(!this.utils.validateId(id)) throw 'ID must be greater than zero';
+
+        const fields = [
+            'title', 
+            'description',
+            'deadline_date',
+            'comments',
+            'responsable_name',
+            'tags'
+        ];
+        const values = this.utils.extractValuesFromModel(task);
+        const setValues = this.utils.prepareUpdateValues(fields, values);
+        return this.db.query(`UPDATE tasks ${setValues} WHERE id = ${id};`);
     }
     
+    /**
+     * @param id task id to be deleted
+     */
     delete(id: number) {
-
+        if(!this.utils.validateId(id)) throw 'ID must be greater than zero';
+        return this.db.query(`DELETE FROM tasks WHERE id = ${id}`);
     }
-
-    setValues(values: ITask): string {
-        let valuesString: string = '(';
-        for(let value in values) {
-            valuesString += `${value},`
-        }
-
-        valuesString.slice(0,-1);
-        valuesString += ');'
-        return valuesString;
-    }
-
-
 }
