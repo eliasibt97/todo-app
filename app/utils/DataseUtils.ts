@@ -4,13 +4,13 @@ export class DatabaseUtils {
      * @param values ITask object
      * @returns ordered values to insert into a database
      */
-    prepareInsertValues(values: any): string {
+    prepareInsertValues(values: any, sessionId: string): string {
         let valuesString: string = '(';
         for(let value in values) {
             valuesString += `${value},`
         }
 
-        valuesString.slice(0,-1);
+        valuesString += `${sessionId}`
         valuesString += ');'
         return valuesString;
     }
@@ -45,7 +45,14 @@ export class DatabaseUtils {
         return valuesArray;
     }
 
+    /**
+     * Validate a resource in a database by a given ID
+     * @param id model ID
+     * @returns if the ID is valid or not
+     */
     validateId(id: number): boolean {
+
+        // TODO: implement database resource search by ID
         if(id <= 0) {
             return false;
         }

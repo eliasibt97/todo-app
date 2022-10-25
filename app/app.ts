@@ -1,15 +1,19 @@
 import express from "express";
+import { Session } from "./modules/Session";
 import { Task } from "./modules/Task";
 
 const app = express();
 const port = process.env.PORT || 3000;
-const task = new Task();
+const session = new Session();
+session.start();
+
+const task = new Task(session.id);
 
 app.listen(port, ()=> {
     console.log(`[SERVER]: Server is running on port ${port}`);
 })
 
-app.get("/tasks", (req, res) => {
+app.get("/tasks", (req, res, next) => {
     task.getAll().then((response) => {
         res.send(response);
     }).catch((err) => console.error(err));
