@@ -6,6 +6,10 @@ export class Task {
 
     private db = DBConfig.getInstance();
     private utils = new DatabaseUtils();
+    private sessionId!: string;
+    constructor(session: string) {
+        this.sessionId = session;
+    }
 
     /**
      * @returns list of all tasks
@@ -14,7 +18,8 @@ export class Task {
         const selectQuery: string = 
         `SELECT t.id, t.title,s.title AS status
         FROM tasks t
-        INNER JOIN status s ON s.id = t.status_id;`;
+        INNER JOIN status s ON s.id = t.status_id 
+        WHERE session_id = ${this.sessionId};`;
         return this.db.query(`${selectQuery};`);
     }
 
@@ -31,7 +36,8 @@ export class Task {
             t.tags, s.title AS status
         FROM tasks t 
         INNER JOIN status s ON s.id = t.status_id
-        WHERE t.id = ${id};`;
+        WHERE t.id = ${id}
+        AND session_id = ${this.sessionId};`;
         return this.db.query(`${selectQuery}`);
     }
 
@@ -41,7 +47,7 @@ export class Task {
      * @returns created task
      */
     create(task: ITask) {
-        const values = this.utils.prepareInsertValues(task);
+        const values = this.utils.prepareInsertValues(task, this.sessionId);
         return this.db.query(`INSERT INTO tasks VALUES ${values}`);
     }
 
@@ -72,6 +78,6 @@ export class Task {
      */
     delete(id: number) {
         if(!this.utils.validateId(id)) throw 'ID must be greater than zero';
-        return this.db.query(`DELETE FROM tasks WHERE id = ${id}`);
+        return this.db.query(`DELETE FROM tasks WHERE id = ${id} AND session_id = ${this.sessionId};`);
     }
 }
